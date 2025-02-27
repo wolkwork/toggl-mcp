@@ -1,0 +1,18 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install uv
+RUN pip install uv
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Use uv to install dependencies
+RUN uv pip install -r requirements.txt
+
+# Copy the rest of the application
+COPY . .
+
+# Run the MCP server with UV
+CMD ["uv", "run", "python", "toggl_mcp_server.py"]
