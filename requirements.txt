@@ -1,7 +1,0 @@
-fastapi==0.103.1
-uvicorn==0.23.2
-requests==2.31.0
-pydantic==2.3.0
-python-multipart==0.0.6
-python-dotenv==1.0.0
-# These requirements will be installed using uv instead of pip
