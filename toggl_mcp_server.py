@@ -1,17 +1,18 @@
-from mcp.server.fastmcp import FastMCP, Context
-from typing import Dict, List, Optional, Union, Any
-import os
-import requests
 import base64
 import json
-from datetime import datetime, timedelta
+import os
+from typing import Optional
+
+import requests
 from dotenv import load_dotenv
+from mcp.server.fastmcp import Context, FastMCP
 
 # Load environment variables
 load_dotenv()
 
 # Create an MCP server
 mcp = FastMCP("Toggl API", dependencies=["requests", "python-dotenv"])
+
 
 # Configuration
 class TogglConfig:
@@ -24,48 +25,53 @@ class TogglConfig:
         self.reports_api_v3 = "https://api.track.toggl.com/reports/api/v3"
         self.webhooks_api = "https://track.toggl.com/webhooks/api/v1"
 
+
 config = TogglConfig()
+
 
 # Auth and request helpers
 def get_auth_header():
     """Create basic auth header with email and password"""
     if not config.email or not config.password:
-        raise ValueError("Email or password not configured. Set TOGGL_EMAIL and TOGGL_PASSWORD environment variables.")
-    
+        raise ValueError(
+            "Email or password not configured. Set TOGGL_EMAIL and TOGGL_PASSWORD environment variables."
+        )
+
     auth_string = f"{config.email}:{config.password}"
     encoded_auth = base64.b64encode(auth_string.encode()).decode()
     print(f"Generated auth: {encoded_auth}")  # Debug only
     return {"Authorization": f"Basic {encoded_auth}"}
+
 
 def make_request(method: str, url: str, data: dict = None, params: dict = None):
     """Make a request to Toggl API with proper authentication"""
     headers = get_auth_header()
     headers["Content-Type"] = "application/json"
 
-    
     # Debug: Print request details
     print(f"Request URL: {url}")
     print(f"Request Headers: {headers}")
-    
+
     response = requests.request(
         method=method,
         url=url,
         headers=headers,
         json=data if data else None,
-        params=params if params else None
+        params=params if params else None,
     )
-    
+
     # Debug: Print response details
     print(f"Response Status: {response.status_code}")
     print(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
-    
+
     # Check if request was successful
     response.raise_for_status()
-    
+
     # Return parsed JSON if available
     if response.text:
         return response.json()
     return {"status": "success"}
+
 
 # Resources
 @mcp.resource("me://")
@@ -80,12 +86,14 @@ def get_current_user() -> str:
         # Return error but don't crash the server
         return json.dumps({"error": str(e)})
 
+
 @mcp.resource("workspaces://")
 def get_workspaces() -> str:
     """Get all workspaces for the current user"""
     url = f"{config.base_url_v8}/workspaces"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 @mcp.resource("workspaces://{workspace_id}")
 def get_workspace(workspace_id: int) -> str:
@@ -94,6 +102,7 @@ def get_workspace(workspace_id: int) -> str:
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("workspaces://{workspace_id}/users")
 def get_workspace_users(workspace_id: int) -> str:
     """Get all users in a workspace (requires admin access)"""
@@ -101,12 +110,14 @@ def get_workspace_users(workspace_id: int) -> str:
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("workspaces://{workspace_id}/clients")
 def get_workspace_clients(workspace_id: int) -> str:
     """Get all clients in a workspace"""
     url = f"{config.base_url_v8}/workspaces/{workspace_id}/clients"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 @mcp.resource("workspaces://{workspace_id}/projects")
 def get_workspace_projects(workspace_id: int) -> str:
@@ -116,6 +127,7 @@ def get_workspace_projects(workspace_id: int) -> str:
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("workspaces://{workspace_id}/tasks")
 def get_workspace_tasks(workspace_id: int) -> str:
     """Get all tasks in a workspace (premium feature)"""
@@ -124,12 +136,14 @@ def get_workspace_tasks(workspace_id: int) -> str:
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("workspaces://{workspace_id}/tags")
 def get_workspace_tags(workspace_id: int) -> str:
     """Get all tags in a workspace"""
     url = f"{config.base_url_v8}/workspaces/{workspace_id}/tags"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 @mcp.resource("time_entries://{time_entry_id}")
 def get_time_entry(time_entry_id: int) -> str:
@@ -138,12 +152,14 @@ def get_time_entry(time_entry_id: int) -> str:
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("time-entries:/current")
 def get_current_time_entry() -> str:
     """Get the currently running time entry if any"""
     url = f"{config.base_url_v8}/time_entries/current"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 @mcp.resource("projects://{project_id}")
 def get_project(project_id: int) -> str:
@@ -152,12 +168,14 @@ def get_project(project_id: int) -> str:
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("clients://{client_id}")
 def get_client(client_id: int) -> str:
     """Get details for a specific client"""
     url = f"{config.base_url_v8}/clients/{client_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 @mcp.resource("tags://{tag_id}")
 def get_tag(tag_id: int) -> str:
@@ -166,12 +184,14 @@ def get_tag(tag_id: int) -> str:
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
+
 @mcp.resource("tasks://{task_id}")
 def get_task(task_id: int) -> str:
     """Get details for a specific task"""
     url = f"{config.base_url_v8}/tasks/{task_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
+
 
 # Tools
 @mcp.tool()
@@ -187,15 +207,16 @@ def get_weekly_report(
         "workspace_id": workspace_id,
         "user_agent": user_agent,
     }
-    
+
     # Add optional parameters
     if since:
         params["since"] = since
     if until:
         params["until"] = until
-    
+
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
+
 
 @mcp.tool()
 def get_detailed_report(
@@ -212,15 +233,16 @@ def get_detailed_report(
         "user_agent": user_agent,
         "page": page,
     }
-    
+
     # Add optional parameters
     if since:
         params["since"] = since
     if until:
         params["until"] = until
-    
+
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
+
 
 @mcp.tool()
 def get_summary_report(
@@ -237,29 +259,28 @@ def get_summary_report(
         "user_agent": user_agent,
         "grouping": grouping,
     }
-    
+
     # Add optional parameters
     if since:
         params["since"] = since
     if until:
         params["until"] = until
-    
+
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
 
+
 @mcp.tool()
-def get_webhook_subscriptions(
-    workspace_id: int,
-    user_agent: str = "TogglMCP"
-) -> str:
+def get_webhook_subscriptions(workspace_id: int, user_agent: str = "TogglMCP") -> str:
     """List available webhook subscriptions for a workspace"""
     url = f"{config.webhooks_api}/subscriptions/{workspace_id}"
     headers = get_auth_header()
     headers["User-Agent"] = user_agent
-    
+
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return json.dumps(response.json(), indent=2)
+
 
 # Prompts
 @mcp.prompt()
@@ -280,6 +301,7 @@ And the following tools:
 Please provide insights on time usage patterns and productivity.
 """
 
+
 @mcp.prompt()
 def project_analysis(project_id: int) -> str:
     """Create a prompt for analyzing a specific project"""
@@ -294,5 +316,6 @@ And the following tools:
 Please provide insights on project progress, time allocation, and any potential issues.
 """
 
+
 if __name__ == "__main__":
-    mcp.run() 
+    mcp.run()
