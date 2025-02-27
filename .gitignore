@@ -29,3 +29,6 @@ var/
 .vscode/
 *.swp
 *.swo 
+
+.log
+.env

@@ -29,6 +29,12 @@ class TogglConfig:
 config = TogglConfig()
 
 
+# If you need debugging, use a file instead:
+def log_to_file(message):
+    with open("mcp_debug.log", "a") as f:
+        f.write(f"{message}\n")
+
+
 # Auth and request helpers
 def get_auth_header():
     """Create basic auth header with email and password"""
@@ -39,7 +45,7 @@ def get_auth_header():
 
     auth_string = f"{config.email}:{config.password}"
     encoded_auth = base64.b64encode(auth_string.encode()).decode()
-    print(f"Generated auth: {encoded_auth}")  # Debug only
+    log_to_file(f"Generated auth: {encoded_auth}")  # Log to file instead of stdout
     return {"Authorization": f"Basic {encoded_auth}"}
 
 
@@ -49,8 +55,8 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
     headers["Content-Type"] = "application/json"
 
     # Debug: Print request details
-    print(f"Request URL: {url}")
-    print(f"Request Headers: {headers}")
+    log_to_file(f"Request URL: {url}")
+    log_to_file(f"Request Headers: {headers}")
 
     response = requests.request(
         method=method,
@@ -61,8 +67,8 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
     )
 
     # Debug: Print response details
-    print(f"Response Status: {response.status_code}")
-    print(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
+    log_to_file(f"Response Status: {response.status_code}")
+    log_to_file(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
 
     # Check if request was successful
     response.raise_for_status()
@@ -82,7 +88,7 @@ def get_current_user() -> str:
         result = make_request("GET", url)
         return json.dumps(result, indent=2)
     except Exception as e:
-        print(f"Error getting user data: {e}")
+        log_to_file(f"Error getting user data: {e}")
         # Return error but don't crash the server
         return json.dumps({"error": str(e)})
 
@@ -90,7 +96,7 @@ def get_current_user() -> str:
 @mcp.resource("workspaces://")
 def get_workspaces() -> str:
     """Get all workspaces for the current user"""
-    url = f"{config.base_url_v8}/workspaces"
+    url = f"{config.base_url_v9}/workspaces"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -98,7 +104,7 @@ def get_workspaces() -> str:
 @mcp.resource("workspaces://{workspace_id}")
 def get_workspace(workspace_id: int) -> str:
     """Get details for a specific workspace"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -106,7 +112,7 @@ def get_workspace(workspace_id: int) -> str:
 @mcp.resource("workspaces://{workspace_id}/users")
 def get_workspace_users(workspace_id: int) -> str:
     """Get all users in a workspace (requires admin access)"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}/users"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}/users"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -114,7 +120,7 @@ def get_workspace_users(workspace_id: int) -> str:
 @mcp.resource("workspaces://{workspace_id}/clients")
 def get_workspace_clients(workspace_id: int) -> str:
     """Get all clients in a workspace"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}/clients"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}/clients"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -122,7 +128,7 @@ def get_workspace_clients(workspace_id: int) -> str:
 @mcp.resource("workspaces://{workspace_id}/projects")
 def get_workspace_projects(workspace_id: int) -> str:
     """Get all projects in a workspace"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}/projects"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}/projects"
     params = {"active": "true"}
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
@@ -131,7 +137,7 @@ def get_workspace_projects(workspace_id: int) -> str:
 @mcp.resource("workspaces://{workspace_id}/tasks")
 def get_workspace_tasks(workspace_id: int) -> str:
     """Get all tasks in a workspace (premium feature)"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}/tasks"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}/tasks"
     params = {"active": "true"}
     result = make_request("GET", url, params=params)
     return json.dumps(result, indent=2)
@@ -140,7 +146,7 @@ def get_workspace_tasks(workspace_id: int) -> str:
 @mcp.resource("workspaces://{workspace_id}/tags")
 def get_workspace_tags(workspace_id: int) -> str:
     """Get all tags in a workspace"""
-    url = f"{config.base_url_v8}/workspaces/{workspace_id}/tags"
+    url = f"{config.base_url_v9}/workspaces/{workspace_id}/tags"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -148,7 +154,7 @@ def get_workspace_tags(workspace_id: int) -> str:
 @mcp.resource("time_entries://{time_entry_id}")
 def get_time_entry(time_entry_id: int) -> str:
     """Get a specific time entry"""
-    url = f"{config.base_url_v8}/time_entries/{time_entry_id}"
+    url = f"{config.base_url_v9}/time_entries/{time_entry_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -156,7 +162,7 @@ def get_time_entry(time_entry_id: int) -> str:
 @mcp.resource("time-entries:/current")
 def get_current_time_entry() -> str:
     """Get the currently running time entry if any"""
-    url = f"{config.base_url_v8}/time_entries/current"
+    url = f"{config.base_url_v9}/time_entries/current"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -164,7 +170,7 @@ def get_current_time_entry() -> str:
 @mcp.resource("projects://{project_id}")
 def get_project(project_id: int) -> str:
     """Get details for a specific project"""
-    url = f"{config.base_url_v8}/projects/{project_id}"
+    url = f"{config.base_url_v9}/projects/{project_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -172,7 +178,7 @@ def get_project(project_id: int) -> str:
 @mcp.resource("clients://{client_id}")
 def get_client(client_id: int) -> str:
     """Get details for a specific client"""
-    url = f"{config.base_url_v8}/clients/{client_id}"
+    url = f"{config.base_url_v9}/clients/{client_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -180,7 +186,7 @@ def get_client(client_id: int) -> str:
 @mcp.resource("tags://{tag_id}")
 def get_tag(tag_id: int) -> str:
     """Get details for a specific tag"""
-    url = f"{config.base_url_v8}/tags/{tag_id}"
+    url = f"{config.base_url_v9}/tags/{tag_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
@@ -188,7 +194,7 @@ def get_tag(tag_id: int) -> str:
 @mcp.resource("tasks://{task_id}")
 def get_task(task_id: int) -> str:
     """Get details for a specific task"""
-    url = f"{config.base_url_v8}/tasks/{task_id}"
+    url = f"{config.base_url_v9}/tasks/{task_id}"
     result = make_request("GET", url)
     return json.dumps(result, indent=2)
 
