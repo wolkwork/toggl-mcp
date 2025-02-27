@@ -5,6 +5,10 @@ import requests
 import base64
 import json
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Create an MCP server
 mcp = FastMCP("Toggl API", dependencies=["requests", "python-dotenv"])
@@ -12,7 +16,8 @@ mcp = FastMCP("Toggl API", dependencies=["requests", "python-dotenv"])
 # Configuration
 class TogglConfig:
     def __init__(self):
-        self.api_token = os.environ.get("TOGGL_API_TOKEN", "")
+        self.email = os.environ.get("TOGGL_EMAIL")
+        self.password = os.environ.get("TOGGL_PASSWORD")
         self.base_url_v8 = "https://api.track.toggl.com/api/v8"
         self.base_url_v9 = "https://api.track.toggl.com/api/v9"
         self.reports_api_v2 = "https://api.track.toggl.com/reports/api/v2"
@@ -23,18 +28,24 @@ config = TogglConfig()
 
 # Auth and request helpers
 def get_auth_header():
-    """Create basic auth header with API token"""
-    if not config.api_token:
-        raise ValueError("API token not configured")
+    """Create basic auth header with email and password"""
+    if not config.email or not config.password:
+        raise ValueError("Email or password not configured. Set TOGGL_EMAIL and TOGGL_PASSWORD environment variables.")
     
-    auth_string = f"{config.api_token}:api_token"
+    auth_string = f"{config.email}:{config.password}"
     encoded_auth = base64.b64encode(auth_string.encode()).decode()
+    print(f"Generated auth: {encoded_auth}")  # Debug only
     return {"Authorization": f"Basic {encoded_auth}"}
 
 def make_request(method: str, url: str, data: dict = None, params: dict = None):
     """Make a request to Toggl API with proper authentication"""
     headers = get_auth_header()
     headers["Content-Type"] = "application/json"
+
+    
+    # Debug: Print request details
+    print(f"Request URL: {url}")
+    print(f"Request Headers: {headers}")
     
     response = requests.request(
         method=method,
@@ -43,6 +54,10 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
         json=data if data else None,
         params=params if params else None
     )
+    
+    # Debug: Print response details
+    print(f"Response Status: {response.status_code}")
+    print(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
     
     # Check if request was successful
     response.raise_for_status()
@@ -56,9 +71,14 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
 @mcp.resource("me://")
 def get_current_user() -> str:
     """Get current user data"""
-    url = f"{config.base_url_v8}/me"
-    result = make_request("GET", url)
-    return json.dumps(result, indent=2)
+    url = f"{config.base_url_v9}/me"
+    try:
+        result = make_request("GET", url)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        print(f"Error getting user data: {e}")
+        # Return error but don't crash the server
+        return json.dumps({"error": str(e)})
 
 @mcp.resource("workspaces://")
 def get_workspaces() -> str:

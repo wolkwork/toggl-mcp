@@ -9,7 +9,7 @@ This project implements an MCP server using the official [Model Context Protocol
 ## Features
 
 - Read access to Toggl APIs through a unified interface
-- Authentication handled automatically with your API token
+- Authentication handled automatically with your email and password
 - Structured data models for Toggl entities
 - Support for read operations:
   - Time entries retrieval
@@ -24,17 +24,18 @@ This project implements an MCP server using the official [Model Context Protocol
 
 - Python 3.10 or higher
 - UV package manager
-- A Toggl account with an API token
+- A Toggl account
 
 ### Environment Variables
 
-Set the following environment variable:
+Set the following environment variables:
 
 ```bash
-TOGGL_API_TOKEN=your_toggl_api_token
+TOGGL_EMAIL=your_email@example.com
+TOGGL_PASSWORD=your_password
 ```
 
-You can find your API token in your Toggl profile settings. The easiest way to set this up is to create a `.env` file in the project root with this variable.
+You can create a `.env` file in the project root with these variables.
 
 ### Installation with UV
 
@@ -71,7 +72,7 @@ If you prefer using Docker:
 
 ```bash
 docker build -t toggl-mcp .
-docker run -e TOGGL_API_TOKEN=your_toggl_api_token toggl-mcp
+docker run -e TOGGL_EMAIL=your_email@example.com -e TOGGL_PASSWORD=your_password toggl-mcp
 ```
 
 ## Usage
@@ -125,7 +126,7 @@ The server exposes the following resources:
 - `workspaces://{workspace_id}/tasks` - Tasks in a workspace
 - `workspaces://{workspace_id}/tags` - Tags in a workspace
 - `time_entries://{time_entry_id}` - Specific time entry
-- `time_entries://current` - Currently running time entry
+- `time-entries:/current` - Currently running time entry
 - `projects://{project_id}` - Specific project
 - `clients://{client_id}` - Specific client
 - `tags://{tag_id}` - Specific tag
@@ -156,23 +157,20 @@ When you ask Claude a question about your Toggl data, it can:
 2. Use tools to generate reports and analyze data
 3. Provide insights and visualizations based on your data
 
-All API calls are authenticated using your Toggl API token, and the server only provides read access to your data.
-
-## Rate Limiting
-
-Be mindful of Toggl's rate limiting policies:
-
-- Track API: 1 request per second (per IP per API token)
-- Reports API: 1 request per second (per IP per API token)
+All API calls are authenticated using your Toggl credentials, and the server only provides read access to your data.
 
 ## Troubleshooting
 
 If you encounter issues:
 
-1. Verify your API token is correct
+1. Verify your email and password are correct
 2. Check that you have the necessary permissions in Toggl
 3. Ensure you're using Python 3.10 or higher
 4. Try running in development mode to debug: `mcp dev toggl_mcp_server.py`
+5. Test your credentials directly with curl:
+   ```bash
+   curl -v -u your_email@example.com:your_password -X GET https://api.track.toggl.com/api/v9/me
+   ```
 
 ## License
 
