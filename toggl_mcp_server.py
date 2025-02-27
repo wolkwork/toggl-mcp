@@ -5,7 +5,7 @@ from typing import Optional
 
 import requests
 from dotenv import load_dotenv
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.fastmcp import FastMCP
 
 # Load environment variables
 load_dotenv()
@@ -28,9 +28,9 @@ config = TogglConfig()
 
 
 # If you need debugging, use a file instead:
-def log_to_file(message):
-    with open("mcp_debug.log", "a") as f:
-        f.write(f"{message}\n")
+# def log_to_file(message):
+#     with open("mcp_debug.log", "a") as f:
+#         f.write(f"{message}\n")
 
 
 # Auth and request helpers
@@ -39,14 +39,14 @@ def get_auth_header():
     if config.api_key:
         # API token authentication (preferred)
         auth_string = f"{config.api_key}:api_token"
-        log_to_file("Using API token authentication")
+        # log_to_file("Using API token authentication")
     else:
         raise ValueError(
             "API key not configured. Set TOGGL_API_KEY environment variable."
         )
 
     encoded_auth = base64.b64encode(auth_string.encode()).decode()
-    log_to_file(f"Generated auth: {encoded_auth}")  # Log to file instead of stdout
+    # log_to_file(f"Generated auth: {encoded_auth}")  # Log to file instead of stdout
     return {"Authorization": f"Basic {encoded_auth}"}
 
 
@@ -56,8 +56,8 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
     headers["Content-Type"] = "application/json"
 
     # Debug: Print request details
-    log_to_file(f"Request URL: {url}")
-    log_to_file(f"Request Headers: {headers}")
+    # log_to_file(f"Request URL: {url}")
+    # log_to_file(f"Request Headers: {headers}")
 
     response = requests.request(
         method=method,
@@ -68,8 +68,8 @@ def make_request(method: str, url: str, data: dict = None, params: dict = None):
     )
 
     # Debug: Print response details
-    log_to_file(f"Response Status: {response.status_code}")
-    log_to_file(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
+    # log_to_file(f"Response Status: {response.status_code}")
+    # log_to_file(f"Response Text: {response.text[:200]}...")  # Print first 200 chars
 
     # Check if request was successful
     response.raise_for_status()
@@ -89,7 +89,7 @@ def get_current_user() -> str:
         result = make_request("GET", url)
         return json.dumps(result, indent=2)
     except Exception as e:
-        log_to_file(f"Error getting user data: {e}")
+        # log_to_file(f"Error getting user data: {e}")
         # Return error but don't crash the server
         return json.dumps({"error": str(e)})
 

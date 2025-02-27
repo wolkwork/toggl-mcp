@@ -5,9 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "requests==2.31.0",
-    "pydantic>=2.5.3,<3.0.0",
-    "python-multipart==0.0.6",
-    "python-dotenv==1.0.1",
-    "fastmcp==0.4.1"
+  "requests",
+  "pydantic",
+  "python-multipart",
+  "python-dotenv",
+  "mcp[cli]",
 ]
