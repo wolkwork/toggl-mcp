@@ -17,6 +17,7 @@ This project implements an MCP server using the official [Model Context Protocol
   - Workspace information and settings
   - Reports generation (weekly, detailed, summary)
   - Webhook subscription information
+  - Project trends and insights analysis
 
 ## Setup
 
@@ -119,6 +120,44 @@ Once installed in Claude Desktop, you can interact with the Toggl API through Cl
    Identify days where I have less than 8 hours tracked in workspace 12345 in the last two weeks
    ```
 
+### Insights Queries
+
+1. Analyze project trends:
+
+   ```
+   Analyze the trends for projects in workspace 12345 from 2023-01-01 to 2023-03-31
+   ```
+
+2. Compare current and previous periods:
+
+   ```
+   Compare project time allocation between this month and last month for workspace 12345
+   ```
+
+3. Identify growing or declining projects:
+   ```
+   Which projects in workspace 12345 have shown the most growth in time allocation over the last quarter?
+   ```
+
+### Profitability Queries
+
+1. Analyze project profitability:
+
+   ```
+   Analyze the profitability of projects in workspace 12345 from 2023-01-01 to 2023-03-31
+   ```
+
+2. Find most profitable projects:
+
+   ```
+   Which projects in workspace 12345 have the highest profit margins?
+   ```
+
+3. Optimize resource allocation:
+   ```
+   How can I improve the profitability of projects in workspace 12345?
+   ```
+
 ## Resources
 
 The server exposes the following resources:
@@ -146,6 +185,9 @@ The server provides the following tools:
 - `get_detailed_report` - Generate a detailed report
 - `get_summary_report` - Generate a summary report
 - `get_webhook_subscriptions` - List webhook subscriptions
+- `get_projects_data_trends` - Get project trend data over time
+- `get_profitability_insights` - Get project profitability data
+- `get_revenue_insights` - Get revenue data and trends
 
 ## Prompts
 
@@ -153,6 +195,8 @@ The server includes these prompt templates:
 
 - `analyze_time_entries` - Analyze time entries for a workspace
 - `project_analysis` - Analyze a specific project
+- `project_trends_analysis` - Analyze project trends over time
+- `profitability_analysis` - Analyze project profitability
 
 ## How It Works
 
@@ -196,3 +240,4 @@ This project uses:
 
 - [Model Context Protocol Python SDK](https://github.com/modelcontextprotocol/python-sdk) for building the MCP server
 - [Toggl API](https://github.com/toggl/toggl_api_docs) for time tracking data
+- [Toggl Insights API](https://engineering.toggl.com/docs/reports/insights/) for project trend analysis

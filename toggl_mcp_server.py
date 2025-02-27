@@ -1,7 +1,7 @@
 import base64
 import json
 import os
-from typing import Optional
+from typing import List, Optional
 
 import requests
 from dotenv import load_dotenv
@@ -22,6 +22,7 @@ class TogglConfig:
         self.reports_api_v2 = "https://api.track.toggl.com/reports/api/v2"
         self.reports_api_v3 = "https://api.track.toggl.com/reports/api/v3"
         self.webhooks_api = "https://track.toggl.com/webhooks/api/v1"
+        self.insights_api = "https://api.track.toggl.com/insights/api/v1"
 
 
 config = TogglConfig()
@@ -289,6 +290,167 @@ def get_webhook_subscriptions(workspace_id: int, user_agent: str = "TogglMCP") -
     return json.dumps(response.json(), indent=2)
 
 
+# New Insights API tools
+@mcp.tool()
+def get_projects_data_trends(
+    workspace_id: int,
+    start_date: str,
+    end_date: str,
+    previous_period_start: Optional[str] = None,
+    project_ids: Optional[List[int]] = None,
+    billable: Optional[bool] = None,
+    rounding: Optional[int] = None,
+    rounding_minutes: Optional[int] = None,
+) -> str:
+    """
+    Get projects' data trends from a workspace.
+
+    Parameters:
+    - workspace_id: The ID of the workspace
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - previous_period_start: Previous start date in YYYY-MM-DD format (optional)
+    - project_ids: List of project IDs to filter by (optional)
+    - billable: Whether to filter by billable projects (optional, premium feature)
+    - rounding: Duration rounding settings (optional, premium feature)
+    - rounding_minutes: Duration rounding minutes settings (optional, premium feature)
+
+    Returns:
+    Project trend data showing time spent in current and previous periods
+    """
+    url = f"{config.insights_api}/workspace/{workspace_id}/data_trends/projects"
+
+    # Build request payload
+    payload = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    # Add optional parameters
+    if previous_period_start:
+        payload["previous_period_start"] = previous_period_start
+    if project_ids:
+        payload["project_ids"] = project_ids
+    if billable is not None:
+        payload["billable"] = billable
+    if rounding is not None:
+        payload["rounding"] = rounding
+    if rounding_minutes is not None:
+        payload["rounding_minutes"] = rounding_minutes
+
+    # Make POST request to insights API
+    result = make_request("POST", url, data=payload)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def get_profitability_insights(
+    workspace_id: int,
+    start_date: str,
+    end_date: str,
+    previous_period_start: Optional[str] = None,
+    project_ids: Optional[List[int]] = None,
+    billable: Optional[bool] = None,
+    rounding: Optional[int] = None,
+    rounding_minutes: Optional[int] = None,
+) -> str:
+    """
+    Get profitability insights for projects in a workspace.
+
+    Parameters:
+    - workspace_id: The ID of the workspace
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - previous_period_start: Previous start date in YYYY-MM-DD format (optional)
+    - project_ids: List of project IDs to filter by (optional)
+    - billable: Whether to filter by billable projects (optional, premium feature)
+    - rounding: Duration rounding settings (optional, premium feature)
+    - rounding_minutes: Duration rounding minutes settings (optional, premium feature)
+
+    Returns:
+    Profitability data showing revenue, costs, and profit margins for projects
+    """
+    url = f"{config.insights_api}/workspace/{workspace_id}/profitability/projects"
+
+    # Build request payload
+    payload = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    # Add optional parameters
+    if previous_period_start:
+        payload["previous_period_start"] = previous_period_start
+    if project_ids:
+        payload["project_ids"] = project_ids
+    if billable is not None:
+        payload["billable"] = billable
+    if rounding is not None:
+        payload["rounding"] = rounding
+    if rounding_minutes is not None:
+        payload["rounding_minutes"] = rounding_minutes
+
+    # Make POST request to insights API
+    result = make_request("POST", url, data=payload)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def get_revenue_insights(
+    workspace_id: int,
+    start_date: str,
+    end_date: str,
+    previous_period_start: Optional[str] = None,
+    project_ids: Optional[List[int]] = None,
+    client_ids: Optional[List[int]] = None,
+    billable: Optional[bool] = None,
+    rounding: Optional[int] = None,
+    rounding_minutes: Optional[int] = None,
+) -> str:
+    """
+    Get revenue insights for projects in a workspace.
+
+    Parameters:
+    - workspace_id: The ID of the workspace
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - previous_period_start: Previous start date in YYYY-MM-DD format (optional)
+    - project_ids: List of project IDs to filter by (optional)
+    - client_ids: List of client IDs to filter by (optional)
+    - billable: Whether to filter by billable projects (optional, premium feature)
+    - rounding: Duration rounding settings (optional, premium feature)
+    - rounding_minutes: Duration rounding minutes settings (optional, premium feature)
+
+    Returns:
+    Revenue data showing billable amounts, hourly rates, and revenue trends
+    """
+    url = f"{config.insights_api}/workspace/{workspace_id}/revenue/summary"
+
+    # Build request payload
+    payload = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    # Add optional parameters
+    if previous_period_start:
+        payload["previous_period_start"] = previous_period_start
+    if project_ids:
+        payload["project_ids"] = project_ids
+    if client_ids:
+        payload["client_ids"] = client_ids
+    if billable is not None:
+        payload["billable"] = billable
+    if rounding is not None:
+        payload["rounding"] = rounding
+    if rounding_minutes is not None:
+        payload["rounding_minutes"] = rounding_minutes
+
+    # Make POST request to insights API
+    result = make_request("POST", url, data=payload)
+    return json.dumps(result, indent=2)
+
+
 # Prompts
 @mcp.prompt()
 def analyze_time_entries(workspace_id: int) -> str:
@@ -321,6 +483,46 @@ And the following tools:
 - get_summary_report
 
 Please provide insights on project progress, time allocation, and any potential issues.
+"""
+
+
+@mcp.prompt()
+def project_trends_analysis(workspace_id: int, start_date: str, end_date: str) -> str:
+    """Create a prompt for analyzing project trends over time"""
+    return f"""Please analyze the trends for projects in workspace {workspace_id} from {start_date} to {end_date}.
+    
+You can use the following tools:
+- get_projects_data_trends(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+- get_profitability_insights(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+- get_revenue_insights(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+
+Please provide insights on:
+1. Which projects are showing increased or decreased time allocation
+2. Patterns in project usage over time
+3. Recommendations for optimizing time allocation
+4. Revenue analysis over time
+5. Profitability analysis and margin trends
+6. Suggestions for improving project profitability
+"""
+
+
+@mcp.prompt()
+def profitability_analysis(workspace_id: int, start_date: str, end_date: str) -> str:
+    """Create a prompt for analyzing project profitability"""
+    return f"""Please analyze the profitability of projects in workspace {workspace_id} from {start_date} to {end_date}.
+    
+You can use the following tools:
+- get_profitability_insights(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+- get_revenue_insights(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+- get_projects_data_trends(workspace_id={workspace_id}, start_date="{start_date}", end_date="{end_date}")
+
+Please provide insights on:
+1. Which projects are most and least profitable
+2. Trends in profit margins over time
+3. Correlation between time spent and profitability
+4. Recommendations for improving overall profitability
+5. Potential pricing adjustments for specific projects
+6. Resource allocation optimization suggestions
 """
 
 
