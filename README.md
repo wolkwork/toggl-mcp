@@ -9,7 +9,7 @@ This project implements an MCP server using the official [Model Context Protocol
 ## Features
 
 - Read access to Toggl APIs through a unified interface
-- Authentication handled automatically with your email and password
+- Authentication handled automatically with your Toggl API key
 - Structured data models for Toggl entities
 - Support for read operations:
   - Time entries retrieval
@@ -24,27 +24,28 @@ This project implements an MCP server using the official [Model Context Protocol
 
 - Python 3.10 or higher
 - UV package manager
-- A Toggl account
+- A Toggl account with an API key
 
 ### Environment Variables
 
-Set the following environment variables:
+Set the following environment variable:
 
 ```bash
-TOGGL_EMAIL=your_email@example.com
-TOGGL_PASSWORD=your_password
+TOGGL_API_KEY=your_toggl_api_key
 ```
 
-You can create a `.env` file in the project root with these variables.
+You can find your API key in your Toggl profile settings. The easiest way to set this up is to create a `.env` file in the project root with this variable.
 
 ### Installation with UV
 
 1. Install UV:
+
 ```bash
 pip install uv
 ```
 
 2. Create a virtual environment and install dependencies:
+
 ```bash
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -52,6 +53,7 @@ uv pip install -r requirements.txt
 ```
 
 3. Install the MCP server in Claude Desktop:
+
 ```bash
 mcp install toggl_mcp_server.py
 ```
@@ -72,7 +74,7 @@ If you prefer using Docker:
 
 ```bash
 docker build -t toggl-mcp .
-docker run -e TOGGL_EMAIL=your_email@example.com -e TOGGL_PASSWORD=your_password toggl-mcp
+docker run -e TOGGL_API_KEY=your_toggl_api_key toggl-mcp
 ```
 
 ## Usage
@@ -82,11 +84,13 @@ Once installed in Claude Desktop, you can interact with the Toggl API through Cl
 ### Basic Queries
 
 1. Ask Claude to analyze your time entries:
+
    ```
    Can you analyze my time entries for workspace 12345?
    ```
 
 2. Get information about a specific project:
+
    ```
    Tell me about project 67890
    ```
@@ -99,11 +103,13 @@ Once installed in Claude Desktop, you can interact with the Toggl API through Cl
 ### Advanced Queries
 
 1. Analyze productivity patterns:
+
    ```
    Can you analyze my time entries for workspace 12345 and tell me when I'm most productive during the day?
    ```
 
 2. Compare project time allocation:
+
    ```
    Compare the time spent on projects A and B in workspace 12345 over the last quarter
    ```
@@ -153,23 +159,31 @@ The server includes these prompt templates:
 This project uses the official [Model Context Protocol Python SDK](https://github.com/modelcontextprotocol/python-sdk) to build an MCP server that exposes resources and tools that Claude can use to interact with the Toggl API.
 
 When you ask Claude a question about your Toggl data, it can:
+
 1. Access resources like workspaces, projects, and time entries
 2. Use tools to generate reports and analyze data
 3. Provide insights and visualizations based on your data
 
-All API calls are authenticated using your Toggl credentials, and the server only provides read access to your data.
+All API calls are authenticated using your Toggl API key, and the server only provides read access to your data.
+
+## Rate Limiting
+
+Be mindful of Toggl's rate limiting policies:
+
+- Track API: 1 request per second (per IP per API key)
+- Reports API: 1 request per second (per IP per API key)
 
 ## Troubleshooting
 
 If you encounter issues:
 
-1. Verify your email and password are correct
+1. Verify your API key is correct
 2. Check that you have the necessary permissions in Toggl
 3. Ensure you're using Python 3.10 or higher
 4. Try running in development mode to debug: `mcp dev toggl_mcp_server.py`
-5. Test your credentials directly with curl:
+5. Test your API key directly with curl:
    ```bash
-   curl -v -u your_email@example.com:your_password -X GET https://api.track.toggl.com/api/v9/me
+   curl -v -u your_api_key:api_token -X GET https://api.track.toggl.com/api/v9/me
    ```
 
 ## License
@@ -179,5 +193,6 @@ MIT
 ## Acknowledgements
 
 This project uses:
+
 - [Model Context Protocol Python SDK](https://github.com/modelcontextprotocol/python-sdk) for building the MCP server
 - [Toggl API](https://github.com/toggl/toggl_api_docs) for time tracking data
