@@ -17,9 +17,7 @@ mcp = FastMCP("Toggl API", dependencies=["requests", "python-dotenv"])
 # Configuration
 class TogglConfig:
     def __init__(self):
-        self.email = os.environ.get("TOGGL_EMAIL")
-        self.password = os.environ.get("TOGGL_PASSWORD")
-        self.base_url_v8 = "https://api.track.toggl.com/api/v8"
+        self.api_key = os.environ.get("TOGGL_API_KEY")
         self.base_url_v9 = "https://api.track.toggl.com/api/v9"
         self.reports_api_v2 = "https://api.track.toggl.com/reports/api/v2"
         self.reports_api_v3 = "https://api.track.toggl.com/reports/api/v3"
@@ -37,13 +35,16 @@ def log_to_file(message):
 
 # Auth and request helpers
 def get_auth_header():
-    """Create basic auth header with email and password"""
-    if not config.email or not config.password:
+    """Create basic auth header with token, or email and password"""
+    if config.api_key:
+        # API token authentication (preferred)
+        auth_string = f"{config.api_key}:api_token"
+        log_to_file("Using API token authentication")
+    else:
         raise ValueError(
-            "Email or password not configured. Set TOGGL_EMAIL and TOGGL_PASSWORD environment variables."
+            "API key not configured. Set TOGGL_API_KEY environment variable."
         )
 
-    auth_string = f"{config.email}:{config.password}"
     encoded_auth = base64.b64encode(auth_string.encode()).decode()
     log_to_file(f"Generated auth: {encoded_auth}")  # Log to file instead of stdout
     return {"Authorization": f"Basic {encoded_auth}"}

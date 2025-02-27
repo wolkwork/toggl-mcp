@@ -30,5 +30,5 @@ var/
 *.swp
 *.swo 
 
-.log
+*.log
 .env
