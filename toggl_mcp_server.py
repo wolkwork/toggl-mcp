@@ -7,6 +7,17 @@ import requests
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
+
+# Add this helper function at the top of your file, after the imports
+def get_today_and_past_date(days_ago=7):
+    """Get today's date and a date from the past in YYYY-MM-DD format"""
+    from datetime import datetime, timedelta
+
+    end = datetime.now()
+    start = end - timedelta(days=days_ago)
+    return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+
 # Load environment variables
 load_dotenv()
 
@@ -205,77 +216,199 @@ def get_task(task_id: int) -> str:
 @mcp.tool()
 def get_weekly_report(
     workspace_id: int,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     user_agent: str = "TogglMCP",
 ) -> str:
-    """Get weekly report data"""
-    url = f"{config.reports_api_v2}/weekly"
-    params = {
-        "workspace_id": workspace_id,
-        "user_agent": user_agent,
-    }
+    """
+    Get weekly report data for a workspace
 
-    # Add optional parameters
-    if since:
-        params["since"] = since
-    if until:
-        params["until"] = until
+    Parameters:
+    - workspace_id: The ID of the workspace (REQUIRED)
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    """
+    # Use the correct weekly endpoint format
+    url = f"{config.reports_api_v3}/workspace/{workspace_id}/weekly/time_entries"
 
-    result = make_request("GET", url, params=params)
-    return json.dumps(result, indent=2)
+    # Build request payload
+    payload = {}
+
+    # Add required date parameters
+    if start_date:
+        payload["start_date"] = start_date
+    else:
+        # Default to last 7 days if not specified
+        from datetime import datetime, timedelta
+
+        end = datetime.now()
+        start = end - timedelta(days=7)
+        payload["start_date"] = start.strftime("%Y-%m-%d")
+        payload["end_date"] = end.strftime("%Y-%m-%d")
+
+    if end_date:
+        payload["end_date"] = end_date
+
+    try:
+        # Make POST request to weekly report API
+        result = make_request("POST", url, data=payload)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(
+            {
+                "error": f"Failed to get weekly report: {str(e)}",
+                "url": url,
+                "parameters": {
+                    "workspace_id": workspace_id,
+                    "start_date": payload.get("start_date"),
+                    "end_date": payload.get("end_date"),
+                },
+            },
+            indent=2,
+        )
 
 
 @mcp.tool()
 def get_detailed_report(
     workspace_id: int,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     page: Optional[int] = 1,
     user_agent: str = "TogglMCP",
 ) -> str:
-    """Get detailed report data"""
-    url = f"{config.reports_api_v2}/details"
-    params = {
-        "workspace_id": workspace_id,
-        "user_agent": user_agent,
-        "page": page,
-    }
+    """
+    Get detailed report data for a workspace
 
-    # Add optional parameters
-    if since:
-        params["since"] = since
-    if until:
-        params["until"] = until
+    Parameters:
+    - workspace_id: The ID of the workspace (REQUIRED)
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - page: Page number for pagination
+    - user_agent: User agent string
 
-    result = make_request("GET", url, params=params)
-    return json.dumps(result, indent=2)
+    Example usage:
+    get_detailed_report(workspace_id=1234567, start_date="2023-01-01", end_date="2023-01-31")
+    """
+    # Validate required parameters
+    if not workspace_id:
+        return json.dumps(
+            {
+                "error": "workspace_id is required. Please provide a valid workspace ID.",
+                "example": "get_detailed_report(workspace_id=1234567, start_date='2023-01-01', end_date='2023-01-31')",
+            },
+            indent=2,
+        )
+
+    # Use the correct detailed endpoint format
+    url = f"{config.reports_api_v3}/workspace/{workspace_id}/details/time_entries"
+
+    # Build request payload
+    payload = {}
+
+    # Add required date parameters
+    if start_date:
+        payload["start_date"] = start_date
+    else:
+        # Default to last 7 days if not specified
+        from datetime import datetime, timedelta
+
+        end = datetime.now()
+        start = end - timedelta(days=7)
+        payload["start_date"] = start.strftime("%Y-%m-%d")
+        payload["end_date"] = end.strftime("%Y-%m-%d")
+
+    if end_date:
+        payload["end_date"] = end_date
+
+    # Add pagination
+    if page:
+        payload["page"] = page
+
+    try:
+        # Make POST request to detailed report API
+        result = make_request("POST", url, data=payload)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(
+            {
+                "error": f"Failed to get detailed report: {str(e)}",
+                "url": url,
+                "parameters": {
+                    "workspace_id": workspace_id,
+                    "start_date": payload.get("start_date"),
+                    "end_date": payload.get("end_date"),
+                    "page": page,
+                },
+            },
+            indent=2,
+        )
 
 
 @mcp.tool()
 def get_summary_report(
     workspace_id: int,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     grouping: Optional[str] = "projects",
+    sub_grouping: Optional[str] = None,
     user_agent: str = "TogglMCP",
 ) -> str:
-    """Get summary report data"""
-    url = f"{config.reports_api_v2}/summary"
-    params = {
-        "workspace_id": workspace_id,
-        "user_agent": user_agent,
-        "grouping": grouping,
-    }
+    """
+    Get summary report data for a workspace
 
-    # Add optional parameters
-    if since:
-        params["since"] = since
-    if until:
-        params["until"] = until
+    Parameters:
+    - workspace_id: The ID of the workspace (REQUIRED)
+    - start_date: Start date in YYYY-MM-DD format
+    - end_date: End date in YYYY-MM-DD format
+    - grouping: How to group the data (projects, clients, users)
+    - sub_grouping: Secondary grouping
+    """
+    # Use the correct summary endpoint format
+    url = f"{config.reports_api_v3}/workspace/{workspace_id}/summary/time_entries"
 
-    result = make_request("GET", url, params=params)
-    return json.dumps(result, indent=2)
+    # Build request payload
+    payload = {}
+
+    # Add required date parameters
+    if start_date:
+        payload["start_date"] = start_date
+    else:
+        # Default to last 7 days if not specified
+        from datetime import datetime, timedelta
+
+        end = datetime.now()
+        start = end - timedelta(days=7)
+        payload["start_date"] = start.strftime("%Y-%m-%d")
+        payload["end_date"] = end.strftime("%Y-%m-%d")
+
+    if end_date:
+        payload["end_date"] = end_date
+
+    # Add grouping options
+    if grouping:
+        payload["grouping"] = grouping
+    if sub_grouping:
+        payload["sub_grouping"] = sub_grouping
+
+    try:
+        # Make POST request to summary API
+        result = make_request("POST", url, data=payload)
+        return json.dumps(result, indent=2)
+    except Exception as e:
+        return json.dumps(
+            {
+                "error": f"Failed to get summary report: {str(e)}",
+                "url": url,
+                "parameters": {
+                    "workspace_id": workspace_id,
+                    "start_date": payload.get("start_date"),
+                    "end_date": payload.get("end_date"),
+                    "grouping": grouping,
+                    "sub_grouping": sub_grouping,
+                },
+            },
+            indent=2,
+        )
 
 
 @mcp.tool()
@@ -455,6 +588,12 @@ def get_revenue_insights(
 @mcp.prompt()
 def analyze_time_entries(workspace_id: int) -> str:
     """Create a prompt for analyzing time entries"""
+    # Get current date in YYYY-MM-DD format
+    from datetime import datetime, timedelta
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+
     return f"""Please analyze the time entries for workspace {workspace_id}.
     
 You can use the following resources:
@@ -462,27 +601,38 @@ You can use the following resources:
 - workspaces://{workspace_id}/projects
 - workspaces://{workspace_id}/clients
 
-And the following tools:
-- get_weekly_report
-- get_detailed_report
-- get_summary_report
+First, try to get the workspace details to confirm you have access:
+- First, access the workspace resource to verify it exists
 
-Please provide insights on time usage patterns and productivity.
+Then, use these tools for reporting:
+- get_detailed_report(workspace_id={workspace_id}, start_date="{one_month_ago}", end_date="{today}")
+- If you encounter errors with the detailed report, try a shorter date range, e.g., the last 7 days
+
+Please provide insights on time usage patterns and productivity based on the data you can retrieve.
+If you encounter API errors, please explain what happened and what alternatives might work.
 """
 
 
 @mcp.prompt()
 def project_analysis(project_id: int) -> str:
     """Create a prompt for analyzing a specific project"""
+    # Get current date in YYYY-MM-DD format
+    from datetime import datetime, timedelta
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+
     return f"""Please analyze project {project_id}.
     
 You can use the following resources:
 - projects://{project_id}
 
 And the following tools:
-- get_summary_report
+- get_summary_report(workspace_id=YOUR_WORKSPACE_ID, start_date="{one_month_ago}", end_date="{today}", grouping="projects")
 
 Please provide insights on project progress, time allocation, and any potential issues.
+
+Note: Replace YOUR_WORKSPACE_ID with the actual workspace ID that contains this project. You can get this from the project details.
 """
 
 
